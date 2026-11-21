@@ -102,6 +102,50 @@ def _xml_references(text: str, kind: str) -> list[tuple[str, str]]:
     return refs
 
 
+def _mask_apex_noncode(text: str) -> str:
+    """Mask Apex comments and strings while preserving offsets and newlines."""
+    output = list(text)
+    i = 0
+    n = len(text)
+
+    while i < n:
+        start = i
+
+        if text.startswith("//", i):
+            end = text.find("\n", i + 2)
+            i = n if end == -1 else end
+
+        elif text.startswith("/*", i):
+            end = text.find("*/", i + 2)
+            i = n if end == -1 else end + 2
+
+        elif text[i] in ("'", '"'):
+            quote = text[i]
+            i += 1
+
+            while i < n:
+                if text[i] == "\\" and i + 1 < n:
+                    i += 2
+                elif text[i] == quote:
+                    if i + 1 < n and text[i + 1] == quote:
+                        i += 2
+                    else:
+                        i += 1
+                        break
+                else:
+                    i += 1
+
+        else:
+            i += 1
+            continue
+
+        for j in range(start, i):
+            if text[j] != "\n":
+                output[j] = " "
+
+    return "".join(output)
+
+
 def _code_references(text: str, kind: str) -> list[tuple[str, str, int]]:
     rules: list[tuple[re.Pattern[str], str, str]] = []
     if kind in {"ApexClass", "ApexTrigger"}:
@@ -114,9 +158,14 @@ def _code_references(text: str, kind: str) -> list[tuple[str, str, int]]:
     elif kind == "LWC":
         rules = [(_LWC_APEX, "ApexClass", "lwc-apex"), (_LWC_SCHEMA, "schema", "lwc-schema")]
 
+    code_text = (
+        _mask_apex_noncode(text)
+        if kind in {"ApexClass", "ApexTrigger"}
+        else text
+    )
     refs: list[tuple[str, str, int]] = []
     for pattern, target_kind, relation in rules:
-        for match in pattern.finditer(text):
+        for match in pattern.finditer(code_text):
             name = match.group(1)
             line = text.count("\n", 0, match.start()) + 1
             if target_kind == "schema":
@@ -128,7 +177,7 @@ def _code_references(text: str, kind: str) -> list[tuple[str, str, int]]:
             else:
                 refs.append((f"{target_kind}:{name}", relation, line))
     if kind in {"ApexClass", "ApexTrigger"}:
-        for match in _APEX_SCHEMA_FIELD.finditer(text):
+        for match in _APEX_SCHEMA_FIELD.finditer(code_text):
             name = f"{match.group(1)}.{match.group(2)}"
             refs.append((f"CustomField:{name}", "apex-schema-field", text.count("\n", 0, match.start()) + 1))
     return refs

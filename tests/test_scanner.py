@@ -57,3 +57,68 @@ def test_symlink_file_is_not_scanned(tmp_path: Path):
     (target / "Linked.cls").symlink_to(external)
     result = scan(tmp_path)
     assert "ApexClass:Linked" not in result.components
+
+
+@pytest.mark.parametrize("body", [
+    "// TargetService.run();",
+    "/* TargetService.run(); */",
+    "/* Start comment\nTargetService.run();\nEnd comment */",
+    "String message = 'TargetService.run()';",
+    "String message = 'new TargetService()';",
+])
+def test_apex_ignores_comments_and_string_literals(tmp_path: Path, body: str):
+    classes = tmp_path / "classes"
+    classes.mkdir()
+
+    (classes / "TargetService.cls").write_text(
+        "public class TargetService {}",
+        encoding="utf-8",
+    )
+
+    (classes / "SourceClass.cls").write_text(
+        "public class SourceClass {\n"
+        "  public void check() {\n"
+        f"    {body}\n"
+        "  }\n"
+        "}\n",
+        encoding="utf-8",
+    )
+
+    result = scan(tmp_path)
+
+    assert not any(
+        edge.source == "ApexClass:SourceClass"
+        and edge.target == "ApexClass:TargetService"
+        for edge in result.references
+    )
+
+
+def test_apex_real_reference_preserves_line_number(tmp_path: Path):
+    classes = tmp_path / "classes"
+    classes.mkdir()
+
+    (classes / "TargetService.cls").write_text(
+        "public class TargetService {}",
+        encoding="utf-8",
+    )
+
+    (classes / "SourceClass.cls").write_text(
+        "public class SourceClass {\n"
+        "  /* TargetService.run();\n"
+        "     TargetService.run(); */\n"
+        "  String message = 'TargetService.run();';\n"
+        "  public void check() { TargetService.run(); }\n"
+        "}\n",
+        encoding="utf-8",
+    )
+
+    result = scan(tmp_path)
+
+    references = [
+        edge for edge in result.references
+        if edge.source == "ApexClass:SourceClass"
+        and edge.target == "ApexClass:TargetService"
+    ]
+
+    assert len(references) == 1
+    assert references[0].line == 5
