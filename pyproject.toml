@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "orgimpact"
+version = "0.1.0"
+description = "Read-only Salesforce DX metadata dependency and deployment impact analyzer"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Proprietary - see README"}
+authors = [{name = "Project maintainer"}]
+keywords = ["salesforce", "sfdx", "metadata", "static-analysis", "dependency-graph"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.optional-dependencies]
+web = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1"]
+dev = ["fastapi>=0.115,<1", "httpx>=0.27,<1", "pytest>=8,<10"]
+
+[project.scripts]
+orgimpact = "orgimpact.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["orgimpact*"]
+
+[tool.setuptools.package-data]
+orgimpact = ["static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

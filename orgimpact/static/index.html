@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>OrgImpact | Metadata change workbench</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-logo" aria-hidden="true">◇</span><div><strong>OrgImpact</strong><small>Salesforce DX Inspector</small></div></div>
+      <div class="side-caption">WORKSPACE</div>
+      <a href="#overview" class="side-nav selected">▦ <span>Overview</span></a>
+      <a href="#changes" class="side-nav">⇄ <span>Change analysis</span></a>
+      <a href="#inventory" class="side-nav">☷ <span>Inventory</span></a>
+      <div class="side-footer"><span class="status-dot"></span> Local · Read-only<br><span class="side-help">No Salesforce credentials or external API calls</span></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <strong>Impact analysis</strong></div><div class="top-meta">v0.1.0 <span class="neutral-pill">OFFLINE</span></div></header>
+      <div class="content">
+        <div class="hero" id="overview"><div><p class="eyebrow">METADATA CHANGE INTELLIGENCE</p><h1>Know the impact <em>before</em> you deploy.</h1><p class="lead">Trace static Salesforce metadata dependencies, explore downstream consumers, and produce an explainable review artifact.</p></div><div class="hero-icon" aria-hidden="true">⌁<span>↗</span></div></div>
+        <div class="notice"><span class="notice-icon">ⓘ</span> <span><strong>Review aid, not a deploy authorization.</strong> Dynamic Apex, managed packages, and runtime behavior are outside this first release.</span></div>
+        <section class="metric-grid" aria-label="Workspace summary"><div class="metric"><span>COMPONENTS INDEXED</span><strong id="metric-components">—</strong><small>Across your local DX source</small></div><div class="metric"><span>STATIC REFERENCES</span><strong id="metric-edges">—</strong><small>Supported by source evidence</small></div><div class="metric"><span>CHANGED COMPONENTS</span><strong id="metric-changed">0</strong><small>Selected for review</small></div><div class="metric"><span>DOWNSTREAM IMPACT</span><strong id="metric-impacted">0</strong><small>Transitive consumers</small></div></section>
+        <section class="section-grid" id="changes">
+          <div class="panel input-panel"><div class="panel-head"><div><p class="eyebrow">01 · SELECT CHANGES</p><h2>Change set</h2></div><span class="neutral-pill">LOCAL SOURCE</span></div><p class="hint">Choose existing metadata components and an operation. For deleted files, use the CLI manifest.</p><div class="form-grid"><label for="component-select">Component<select id="component-select"><option value="">Loading components…</option></select></label><label for="change-status">Operation<select id="change-status"><option value="modified">Modified</option><option value="added">Added</option></select></label></div><button id="add-change" class="btn secondary" type="button">+ Add to change set</button><div id="selected-changes" class="selection-list" aria-live="polite"><p class="empty">No components selected.</p></div><div class="actions"><button id="run-analysis" class="btn primary" type="button">Run impact analysis <span>↗</span></button><button id="download-report" class="btn outline" type="button" disabled>Export review.md</button></div><p id="feedback" class="feedback" role="status" aria-live="polite"></p></div>
+          <div class="panel impact-panel"><div class="panel-head"><div><p class="eyebrow">02 · REVIEW EVIDENCE</p><h2>Risk assessment</h2></div><span class="neutral-pill" id="result-state">NOT RUN</span></div><div class="result-placeholder" id="result-empty"><div class="illustration">◌<span>•</span></div><h3>Your analysis appears here</h3><p>Select a component and run a scan to see risk scores, consumers, and review notes.</p></div><div id="result-body" hidden><div id="risk-cards" class="risk-cards"></div><h3 class="subhead">Additional impacted components</h3><div id="impact-list"></div></div></div>
+        </section>
+        <section class="panel inventory" id="inventory"><div class="panel-head"><div><p class="eyebrow">03 · SOURCE INVENTORY</p><h2>Indexed components</h2></div><label class="search"><span>⌕</span><input id="filter-components" type="search" placeholder="Filter by name or type" aria-label="Filter components"></label></div><div class="table-wrap"><table><thead><tr><th>COMPONENT</th><th>TYPE</th><th>SOURCE FILES</th><th>DEPENDENCIES</th></tr></thead><tbody id="inventory-body"><tr><td colspan="4">Loading…</td></tr></tbody></table></div><div class="table-footer"><span id="inventory-count">0 components</span><span id="scan-warnings"></span></div></section>
+        <footer>OrgImpact · Read-only source analysis · <a href="/api/docs">API reference</a></footer>
+      </div>
+    </main>
+  </div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
