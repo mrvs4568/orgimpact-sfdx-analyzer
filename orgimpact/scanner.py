@@ -22,6 +22,7 @@ _TRIGGER_OBJECT = re.compile(r"\btrigger\s+\w+\s+on\s+([A-Za-z][A-Za-z0-9_]*)\b"
 _LWC_APEX = re.compile(r"@salesforce/apex/([A-Za-z][\w]*)\.[A-Za-z][\w]*")
 _LWC_SCHEMA = re.compile(r"@salesforce/schema/([A-Za-z][\w]*(?:\.[A-Za-z][\w]*)?)")
 _APEX_SCHEMA_FIELD = re.compile(r"\bSchema\.SObjectType\.([A-Za-z][\w]*)\.fields\.([A-Za-z][\w]*)")
+_APEX_QUALIFIED_FIELD = re.compile(r"(?<![\w.])([A-Z][\w]*)\.([A-Za-z][\w]*__c)\b")
 
 
 def component_for_path(path: str) -> tuple[str, str, str] | None:
@@ -177,6 +178,13 @@ def _code_references(text: str, kind: str) -> list[tuple[str, str, int]]:
             else:
                 refs.append((f"{target_kind}:{name}", relation, line))
     if kind in {"ApexClass", "ApexTrigger"}:
+        for match in _APEX_QUALIFIED_FIELD.finditer(code_text):
+            obj, field = match.groups()
+            refs.append((
+                f"CustomField:{obj}.{field}",
+                "apex-field",
+                text.count("\n", 0, match.start()) + 1,
+            ))
         for match in _APEX_SCHEMA_FIELD.finditer(code_text):
             name = f"{match.group(1)}.{match.group(2)}"
             refs.append((f"CustomField:{name}", "apex-schema-field", text.count("\n", 0, match.start()) + 1))

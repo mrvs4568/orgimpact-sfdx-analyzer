@@ -122,3 +122,39 @@ def test_apex_real_reference_preserves_line_number(tmp_path: Path):
 
     assert len(references) == 1
     assert references[0].line == 5
+
+
+def test_apex_qualified_field_reference_detection(tmp_path: Path):
+    field = (
+        tmp_path / "objects" / "Account" / "fields"
+        / "Health_Score__c.field-meta.xml"
+    )
+    field.parent.mkdir(parents=True)
+    field.write_text("<CustomField/>", encoding="utf-8")
+
+    classes = tmp_path / "classes"
+    classes.mkdir()
+
+    (classes / "SourceClass.cls").write_text(
+        "public class SourceClass {\n"
+        "  // Account.Health_Score__c\n"
+        "  String message = 'Account.Health_Score__c';\n"
+        "  /* Account.Health_Score__c */\n"
+        "  Object fieldRef = Account.Health_Score__c;\n"
+        "  Object other = record.Health_Score__c;\n"
+        "  Object missing = Account.Unknown__c;\n"
+        "}\n",
+        encoding="utf-8",
+    )
+
+    result = scan(tmp_path)
+
+    references = [
+        edge for edge in result.references
+        if edge.source == "ApexClass:SourceClass"
+        and edge.target == "CustomField:Account.Health_Score__c"
+    ]
+
+    assert [(edge.relation, edge.line) for edge in references] == [
+        ("apex-field", 5)
+    ]
